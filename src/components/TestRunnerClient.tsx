@@ -10,6 +10,13 @@ type HumorFlavorOption = {
   description: string | null;
 };
 
+type StudyImageSetOption = {
+  id: number;
+  slug: string;
+  description: string | null;
+  images: TestImageOption[];
+};
+
 type TestImageOption = {
   id: string;
   url: string | null;
@@ -19,7 +26,7 @@ type TestImageOption = {
 
 type TestRunnerClientProps = {
   humorFlavors: HumorFlavorOption[];
-  testImages: TestImageOption[];
+  studyImageSets: StudyImageSetOption[];
 };
 
 type RunnerResponse = {
@@ -56,17 +63,51 @@ function normalizeResultItems(result: unknown) {
 
 export function TestRunnerClient({
   humorFlavors,
-  testImages,
+  studyImageSets,
 }: TestRunnerClientProps) {
+  const [humorFlavorQuery, setHumorFlavorQuery] = useState("");
   const [humorFlavorId, setHumorFlavorId] = useState(
     humorFlavors[0] ? String(humorFlavors[0].id) : "",
   );
-  const [imageId, setImageId] = useState(testImages[0]?.id ?? "");
+  const [studyImageSetId, setStudyImageSetId] = useState(
+    studyImageSets[0] ? String(studyImageSets[0].id) : "",
+  );
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [response, setResponse] = useState<RunnerResponse | null>(null);
 
+  const selectedStudyImageSet =
+    studyImageSets.find((set) => String(set.id) === studyImageSetId) ?? null;
+  const testImages = selectedStudyImageSet?.images ?? [];
+  const [imageId, setImageId] = useState(testImages[0]?.id ?? "");
+
   const selectedImage = testImages.find((image) => image.id === imageId) ?? null;
+  const selectedHumorFlavor =
+    humorFlavors.find((flavor) => String(flavor.id) === humorFlavorId) ?? null;
+  const normalizedHumorFlavorQuery = humorFlavorQuery.trim().toLowerCase();
+  const filteredHumorFlavors = humorFlavors.filter((flavor) => {
+    if (!normalizedHumorFlavorQuery) {
+      return true;
+    }
+
+    const slugMatches = flavor.slug.toLowerCase().includes(normalizedHumorFlavorQuery);
+    const descriptionMatches = (flavor.description ?? "")
+      .toLowerCase()
+      .includes(normalizedHumorFlavorQuery);
+
+    return slugMatches || descriptionMatches;
+  });
+
+  const onStudyImageSetChange = (nextStudyImageSetId: string) => {
+    setStudyImageSetId(nextStudyImageSetId);
+    setResponse(null);
+    setError(null);
+
+    const nextStudyImageSet =
+      studyImageSets.find((set) => String(set.id) === nextStudyImageSetId) ?? null;
+
+    setImageId(nextStudyImageSet?.images[0]?.id ?? "");
+  };
 
   const onRun = async () => {
     setIsRunning(true);
@@ -79,7 +120,7 @@ export function TestRunnerClient({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ humorFlavorId, imageId }),
+        body: JSON.stringify({ humorFlavorId, studyImageSetId, imageId }),
       });
 
       const data = (await result.json()) as RunnerResponse | { error?: string };
@@ -110,67 +151,142 @@ export function TestRunnerClient({
           Choose a humor flavor and a test image, then run the Assignment 5 caption
           generation flow against the existing API.
         </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Select a test set first, then choose one image from that set to run this humor
+          flavor against.
+        </p>
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]">
-          <div>
-            <label
-              htmlFor="humor-flavor-select"
-              className="mb-1 block text-sm font-medium text-panel-foreground"
-            >
-              Humor Flavor
-            </label>
-            <select
-              id="humor-flavor-select"
-              value={humorFlavorId}
-              onChange={(event) => setHumorFlavorId(event.target.value)}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-panel-foreground outline-none focus:border-slate-400"
-            >
-              {humorFlavors.map((flavor) => (
-                <option key={flavor.id} value={flavor.id}>
-                  {flavor.slug}
-                </option>
-              ))}
-            </select>
-            {humorFlavors.find((flavor) => String(flavor.id) === humorFlavorId)
-              ?.description ? (
-              <p className="mt-2 text-sm text-muted-foreground">
-                {
-                  humorFlavors.find((flavor) => String(flavor.id) === humorFlavorId)
-                    ?.description
-                }
-              </p>
-            ) : null}
+        <div className="mt-5 grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+          <div className="grid gap-4">
+            <div>
+              <label
+                htmlFor="study-image-set-select"
+                className="mb-1 block text-sm font-medium text-panel-foreground"
+              >
+                Study Image Set
+              </label>
+              <select
+                id="study-image-set-select"
+                value={studyImageSetId}
+                onChange={(event) => onStudyImageSetChange(event.target.value)}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-panel-foreground outline-none focus:border-slate-400"
+              >
+                {studyImageSets.map((set) => (
+                  <option key={set.id} value={set.id}>
+                    {set.slug}
+                  </option>
+                ))}
+              </select>
+              {selectedStudyImageSet?.description ? (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {selectedStudyImageSet.description}
+                </p>
+              ) : null}
+            </div>
+
+            <div>
+              <label
+                htmlFor="humor-flavor-search"
+                className="mb-1 block text-sm font-medium text-panel-foreground"
+              >
+                Search Humor Flavors
+              </label>
+              <input
+                id="humor-flavor-search"
+                type="search"
+                value={humorFlavorQuery}
+                onChange={(event) => setHumorFlavorQuery(event.target.value)}
+                placeholder="Search by flavor name or description"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-panel-foreground outline-none placeholder:text-muted-foreground focus:border-slate-400"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="humor-flavor-select"
+                className="mb-1 block text-sm font-medium text-panel-foreground"
+              >
+                Humor Flavor
+              </label>
+              <select
+                id="humor-flavor-select"
+                value={humorFlavorId}
+                onChange={(event) => setHumorFlavorId(event.target.value)}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-panel-foreground outline-none focus:border-slate-400"
+              >
+                {filteredHumorFlavors.map((flavor) => (
+                  <option key={flavor.id} value={flavor.id}>
+                    {flavor.slug}
+                  </option>
+                ))}
+              </select>
+              {filteredHumorFlavors.length === 0 ? (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  No humor flavors match the current search.
+                </p>
+              ) : null}
+              {selectedHumorFlavor && !filteredHumorFlavors.some((flavor) => flavor.id === selectedHumorFlavor.id) ? (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Current selection: <code>{selectedHumorFlavor.slug}</code>. Clear or adjust the
+                  search to view it in the list.
+                </p>
+              ) : null}
+              {selectedHumorFlavor?.description ? (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {selectedHumorFlavor.description}
+                </p>
+              ) : null}
+            </div>
+
+            <div>
+              <label
+                htmlFor="test-image-select"
+                className="mb-1 block text-sm font-medium text-panel-foreground"
+              >
+                Test Image
+              </label>
+              <select
+                id="test-image-select"
+                value={imageId}
+                onChange={(event) => setImageId(event.target.value)}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-panel-foreground outline-none focus:border-slate-400"
+              >
+                {testImages.map((image) => (
+                  <option key={image.id} value={image.id}>
+                    {image.url ?? image.id}
+                  </option>
+                ))}
+              </select>
+              {testImages.length === 0 ? (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  No images are mapped to the selected study image set.
+                </p>
+              ) : null}
+            </div>
           </div>
 
-          <div>
-            <label
-              htmlFor="test-image-select"
-              className="mb-1 block text-sm font-medium text-panel-foreground"
-            >
-              Test Image
-            </label>
-            <select
-              id="test-image-select"
-              value={imageId}
-              onChange={(event) => setImageId(event.target.value)}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-panel-foreground outline-none focus:border-slate-400"
-            >
-              {testImages.map((image) => (
-                <option key={image.id} value={image.id}>
-                  {image.url ?? image.id}
-                </option>
-              ))}
-            </select>
-            {selectedImage?.additionalContext ? (
-              <p className="mt-2 text-sm text-muted-foreground">
-                Context: {selectedImage.additionalContext}
+          <div className="rounded-xl border border-border bg-muted/40 p-4">
+            <h3 className="text-sm font-semibold text-panel-foreground">Selected Test Image</h3>
+            {selectedImage?.url ? (
+              <div className="mt-3 grid gap-3">
+                <div className="overflow-hidden rounded-xl border border-border bg-muted">
+                  <img
+                    src={selectedImage.url}
+                    alt="Selected test"
+                    className="h-auto max-h-[360px] w-full object-contain"
+                  />
+                </div>
+                {selectedImage.imageDescription || selectedImage.additionalContext ? (
+                  <p className="text-sm text-muted-foreground">
+                    {selectedImage.imageDescription ?? selectedImage.additionalContext}
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">
+                Select an image to preview it before running the test.
               </p>
-            ) : null}
-            {selectedImage?.imageDescription ? (
-              <p className="mt-1 text-sm text-muted-foreground">
-                Description: {selectedImage.imageDescription}
-              </p>
-            ) : null}
+            )}
           </div>
         </div>
 
@@ -178,7 +294,7 @@ export function TestRunnerClient({
           <button
             type="button"
             onClick={onRun}
-            disabled={isRunning || !humorFlavorId || !imageId}
+            disabled={isRunning || !humorFlavorId || !studyImageSetId || !imageId}
             className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
           >
             {isRunning ? "Running Test..." : "Run Test"}
@@ -191,19 +307,6 @@ export function TestRunnerClient({
           </p>
         ) : null}
       </section>
-
-      {selectedImage?.url ? (
-        <section className="rounded-2xl border border-border bg-panel p-6 text-panel-foreground shadow-sm">
-          <h2 className="text-lg font-semibold text-panel-foreground">Selected Test Image</h2>
-          <div className="mt-4 overflow-hidden rounded-xl border border-border bg-muted">
-            <img
-              src={selectedImage.url}
-              alt="Selected test"
-              className="h-auto max-h-[420px] w-full object-contain"
-            />
-          </div>
-        </section>
-      ) : null}
 
       {response ? (
         <section className="rounded-2xl border border-border bg-panel p-6 text-panel-foreground shadow-sm">

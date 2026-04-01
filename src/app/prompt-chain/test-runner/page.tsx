@@ -8,18 +8,52 @@ export default async function PromptChainTestRunnerPage() {
   await requirePromptChainAccess();
   const supabase = await createClient();
 
-  const [{ data: humorFlavors, error: humorFlavorsError }, { data: testImages, error: testImagesError }] =
+  const [
+    { data: humorFlavors, error: humorFlavorsError },
+    { data: studyImageSets, error: studyImageSetsError },
+  ] =
     await Promise.all([
       supabase
         .from("humor_flavors")
         .select("id, slug, description")
         .order("id", { ascending: true }),
       supabase
-        .from("images")
-        .select("id, url, additional_context, image_description, is_common_use")
-        .eq("is_common_use", true)
-        .order("created_datetime_utc", { ascending: false }),
+        .from("study_image_sets")
+        .select(`
+          id,
+          slug,
+          description,
+          study_image_set_image_mappings (
+            id,
+            image:images (
+              id,
+              url,
+              additional_context,
+              image_description
+            )
+          )
+        `)
+        .order("id", { ascending: true }),
     ]);
+
+  const normalizedStudyImageSets =
+    studyImageSets?.map((set) => ({
+      id: set.id,
+      slug: set.slug,
+      description: set.description,
+      images:
+        set.study_image_set_image_mappings
+          ?.map((mapping) =>
+            Array.isArray(mapping.image) ? mapping.image[0] : mapping.image,
+          )
+          .filter((image) => image?.id)
+          .map((image) => ({
+            id: image.id,
+            url: image.url,
+            additionalContext: image.additional_context,
+            imageDescription: image.image_description,
+          })) ?? [],
+    })) ?? [];
 
   return (
     <main className="min-h-screen bg-background px-4 py-10">
@@ -64,8 +98,8 @@ export default async function PromptChainTestRunnerPage() {
           </div>
 
           <p className="mt-5 text-sm text-muted-foreground">
-            Test images are sourced from <code>images</code> rows where{" "}
-            <code>is_common_use = true</code>.
+            Test images are sourced from <code>study_image_sets</code> via{" "}
+            <code>study_image_set_image_mappings</code> into <code>images</code>.
           </p>
 
           {humorFlavorsError ? (
@@ -74,9 +108,9 @@ export default async function PromptChainTestRunnerPage() {
             </p>
           ) : null}
 
-          {testImagesError ? (
+          {studyImageSetsError ? (
             <p className="mt-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300">
-              Unable to load the common-use image test set.
+              Unable to load study image sets.
             </p>
           ) : null}
 
@@ -86,32 +120,25 @@ export default async function PromptChainTestRunnerPage() {
             </p>
           ) : null}
 
-          {!testImagesError && (!testImages || testImages.length === 0) ? (
+          {!studyImageSetsError && normalizedStudyImageSets.length === 0 ? (
             <p className="mt-5 rounded-md border border-border bg-muted px-4 py-3 text-sm text-muted-foreground">
-              No common-use test images found. Add rows in <code>images</code> with{" "}
-              <code>is_common_use = true</code> to use this runner.
+              No study image sets found.
             </p>
           ) : null}
         </section>
 
         {!humorFlavorsError &&
-        !testImagesError &&
+        !studyImageSetsError &&
         humorFlavors &&
         humorFlavors.length > 0 &&
-        testImages &&
-        testImages.length > 0 ? (
+        normalizedStudyImageSets.length > 0 ? (
           <TestRunnerClient
             humorFlavors={humorFlavors.map((flavor) => ({
               id: flavor.id,
               slug: flavor.slug,
               description: flavor.description,
             }))}
-            testImages={testImages.map((image) => ({
-              id: image.id,
-              url: image.url,
-              additionalContext: image.additional_context,
-              imageDescription: image.image_description,
-            }))}
+            studyImageSets={normalizedStudyImageSets}
           />
         ) : null}
       </div>
