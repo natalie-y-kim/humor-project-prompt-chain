@@ -65,7 +65,6 @@ export function TestRunnerClient({
   humorFlavors,
   studyImageSets,
 }: TestRunnerClientProps) {
-  const [humorFlavorQuery, setHumorFlavorQuery] = useState("");
   const [humorFlavorId, setHumorFlavorId] = useState(
     humorFlavors[0] ? String(humorFlavors[0].id) : "",
   );
@@ -84,19 +83,7 @@ export function TestRunnerClient({
   const selectedImage = testImages.find((image) => image.id === imageId) ?? null;
   const selectedHumorFlavor =
     humorFlavors.find((flavor) => String(flavor.id) === humorFlavorId) ?? null;
-  const normalizedHumorFlavorQuery = humorFlavorQuery.trim().toLowerCase();
-  const filteredHumorFlavors = humorFlavors.filter((flavor) => {
-    if (!normalizedHumorFlavorQuery) {
-      return true;
-    }
-
-    const slugMatches = flavor.slug.toLowerCase().includes(normalizedHumorFlavorQuery);
-    const descriptionMatches = (flavor.description ?? "")
-      .toLowerCase()
-      .includes(normalizedHumorFlavorQuery);
-
-    return slugMatches || descriptionMatches;
-  });
+  const filteredHumorFlavors = humorFlavors;
 
   const onStudyImageSetChange = (nextStudyImageSetId: string) => {
     setStudyImageSetId(nextStudyImageSetId);
@@ -186,28 +173,14 @@ export function TestRunnerClient({
 
             <div>
               <label
-                htmlFor="humor-flavor-search"
-                className="mb-1 block text-sm font-medium text-panel-foreground"
-              >
-                Search Humor Flavors
-              </label>
-              <input
-                id="humor-flavor-search"
-                type="search"
-                value={humorFlavorQuery}
-                onChange={(event) => setHumorFlavorQuery(event.target.value)}
-                placeholder="Search by flavor name or description"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-panel-foreground outline-none placeholder:text-muted-foreground focus:border-slate-400"
-              />
-            </div>
-
-            <div>
-              <label
                 htmlFor="humor-flavor-select"
                 className="mb-1 block text-sm font-medium text-panel-foreground"
               >
                 Humor Flavor
               </label>
+              <p className="mb-2 text-xs text-muted-foreground">
+                Start typing in the select list to search the available flavors.
+              </p>
               <select
                 id="humor-flavor-select"
                 value={humorFlavorId}

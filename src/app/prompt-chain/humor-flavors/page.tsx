@@ -13,20 +13,47 @@ type HumorFlavorsPageProps = {
   searchParams: Promise<{
     error?: string;
     success?: string;
+    page?: string;
+    sort?: string;
   }>;
 };
+
+const PAGE_SIZE = 10;
 
 export default async function HumorFlavorsPage({
   searchParams,
 }: HumorFlavorsPageProps) {
   await requirePromptChainAccess();
   const params = await searchParams;
+
+  const currentPage = Math.max(1, Number(params.page ?? "1"));
+  const sort = params.sort === "recent" ? "recent" : "id";
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const endIndex = startIndex + PAGE_SIZE - 1;
+
   const supabase = await createClient();
 
-  const { data: humorFlavors, error } = await supabase
+  const { data: humorFlavors, error, count } = await supabase
     .from("humor_flavors")
-    .select("id, created_datetime_utc, slug, description")
-    .order("id", { ascending: true });
+    .select("id, created_datetime_utc, slug, description", { count: "exact" })
+    .order(sort === "recent" ? "created_datetime_utc" : "id", {
+      ascending: sort !== "recent",
+    })
+    .range(startIndex, endIndex);
+
+  const totalItems = count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+  const hasPrevious = currentPage > 1;
+  const hasNext = currentPage < totalPages;
+
+  const createPageLink = (page: number, newSort: string) => {
+    const query = new URLSearchParams();
+    query.set("page", String(page));
+    query.set("sort", newSort);
+    return `/prompt-chain/humor-flavors?${query.toString()}`;
+  };
+
+  const currentSortLabel = sort === "recent" ? "Most Recent" : "ID Ascending";
 
   return (
     <main className="min-h-screen bg-background px-4 py-10">
@@ -55,7 +82,7 @@ export default async function HumorFlavorsPage({
                 <Link
                   href="/prompt-chain"
                   prefetch={false}
-                  className="rounded-md border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted"
+                  className="rounded-md border border-blue-500 bg-blue-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-600"
                 >
                   Dashboard
                 </Link>
@@ -141,6 +168,35 @@ export default async function HumorFlavorsPage({
           <p className="mt-2 text-sm text-muted-foreground">
             Update or delete existing rows directly from this table.
           </p>
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="font-medium text-panel-foreground">Sort:</span>
+              <Link
+                href={createPageLink(1, "id")}
+                prefetch={false}
+                className={`rounded-md border px-3 py-1 text-sm font-medium transition ${
+                  sort === "id"
+                    ? "border-blue-500 bg-blue-50 text-blue-800"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                ID Ascending
+              </Link>
+              <Link
+                href={createPageLink(1, "recent")}
+                prefetch={false}
+                className={`rounded-md border px-3 py-1 text-sm font-medium transition ${
+                  sort === "recent"
+                    ? "border-blue-500 bg-blue-50 text-blue-800"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                Most Recent
+              </Link>
+            </div>
+            <p className="text-sm text-muted-foreground">Current: {currentSortLabel}</p>
+          </div>
 
           {error ? (
             <p className="mt-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300">
@@ -234,6 +290,40 @@ export default async function HumorFlavorsPage({
                 {error ? "Unable to display humor flavors." : "No humor flavors found."}
               </div>
             )}
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+            <div>
+              Showing {humorFlavors ? humorFlavors.length : 0} of {totalItems} total
+              entries.
+            </div>
+            <div className="flex items-center gap-2">
+              <Link
+                href={hasPrevious ? createPageLink(currentPage - 1, sort) : "#"}
+                prefetch={false}
+                className={`rounded-md border px-3 py-1 text-sm font-medium transition ${
+                  hasPrevious
+                    ? "border-border text-muted-foreground hover:bg-muted"
+                    : "border-border bg-muted text-muted-foreground/60 pointer-events-none"
+                }`}
+              >
+                Previous
+              </Link>
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+              <Link
+                href={hasNext ? createPageLink(currentPage + 1, sort) : "#"}
+                prefetch={false}
+                className={`rounded-md border px-3 py-1 text-sm font-medium transition ${
+                  hasNext
+                    ? "border-border text-muted-foreground hover:bg-muted"
+                    : "border-border bg-muted text-muted-foreground/60 pointer-events-none"
+                }`}
+              >
+                Next
+              </Link>
+            </div>
           </div>
         </section>
       </div>
