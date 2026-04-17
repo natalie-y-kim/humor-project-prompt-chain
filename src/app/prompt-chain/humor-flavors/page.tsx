@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   createHumorFlavorAction,
   deleteHumorFlavorAction,
+  duplicateHumorFlavorAction,
   updateHumorFlavorAction,
 } from "./actions";
 
@@ -15,6 +16,7 @@ type HumorFlavorsPageProps = {
     success?: string;
     page?: string;
     sort?: string;
+    search?: string;
   }>;
 };
 
@@ -28,14 +30,21 @@ export default async function HumorFlavorsPage({
 
   const currentPage = Math.max(1, Number(params.page ?? "1"));
   const sort = params.sort === "recent" ? "recent" : "id";
+  const searchTerm = params.search?.trim() ?? "";
   const startIndex = (currentPage - 1) * PAGE_SIZE;
   const endIndex = startIndex + PAGE_SIZE - 1;
 
   const supabase = await createClient();
 
-  const { data: humorFlavors, error, count } = await supabase
+  let query = supabase
     .from("humor_flavors")
-    .select("id, created_datetime_utc, slug, description", { count: "exact" })
+    .select("id, created_datetime_utc, slug, description", { count: "exact" });
+
+  if (searchTerm) {
+    query = query.or(`slug.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+  }
+
+  const { data: humorFlavors, error, count } = await query
     .order(sort === "recent" ? "created_datetime_utc" : "id", {
       ascending: sort !== "recent",
     })
@@ -50,6 +59,9 @@ export default async function HumorFlavorsPage({
     const query = new URLSearchParams();
     query.set("page", String(page));
     query.set("sort", newSort);
+    if (searchTerm) {
+      query.set("search", searchTerm);
+    }
     return `/prompt-chain/humor-flavors?${query.toString()}`;
   };
 
@@ -169,6 +181,42 @@ export default async function HumorFlavorsPage({
             Update or delete existing rows directly from this table.
           </p>
 
+          <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="flex-1">
+              <label
+                htmlFor="search-flavors"
+                className="mb-2 block text-sm font-medium text-panel-foreground"
+              >
+                Search Flavors
+              </label>
+              <form className="flex gap-2">
+                <input
+                  id="search-flavors"
+                  name="search"
+                  type="text"
+                  placeholder="Search by slug or description..."
+                  defaultValue={searchTerm}
+                  className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-panel-foreground outline-none focus:border-slate-400"
+                />
+                <button
+                  type="submit"
+                  className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+                >
+                  Search
+                </button>
+                {searchTerm && (
+                  <Link
+                    href="/prompt-chain/humor-flavors"
+                    prefetch={false}
+                    className="rounded-md border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted"
+                  >
+                    Clear
+                  </Link>
+                )}
+              </form>
+            </div>
+          </div>
+
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="font-medium text-panel-foreground">Sort:</span>
@@ -277,6 +325,13 @@ export default async function HumorFlavorsPage({
                     </Link>
                     <button
                       type="submit"
+                      formAction={duplicateHumorFlavorAction}
+                      className="rounded-md border border-emerald-300 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-900/70 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                    >
+                      Duplicate
+                    </button>
+                    <button
+                      type="submit"
                       formAction={deleteHumorFlavorAction}
                       className="rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 dark:border-red-900/70 dark:text-red-300 dark:hover:bg-red-950/40"
                     >
@@ -287,7 +342,11 @@ export default async function HumorFlavorsPage({
               ))
             ) : (
               <div className="rounded-xl border border-border bg-muted px-4 py-6 text-sm text-muted-foreground">
-                {error ? "Unable to display humor flavors." : "No humor flavors found."}
+                {searchTerm
+                  ? "No humor flavors match your search."
+                  : error
+                    ? "Unable to display humor flavors."
+                    : "No humor flavors found."}
               </div>
             )}
           </div>
@@ -296,6 +355,7 @@ export default async function HumorFlavorsPage({
             <div>
               Showing {humorFlavors ? humorFlavors.length : 0} of {totalItems} total
               entries.
+              {searchTerm && ` (filtered for "${searchTerm}")`}
             </div>
             <div className="flex items-center gap-2">
               <Link
