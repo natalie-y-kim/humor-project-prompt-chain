@@ -3,6 +3,9 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useState } from "react";
+import { SectionCard } from "./SectionCard";
+import { FormField } from "./FormField";
+import { AlertBanner } from "./AlertBanner";
 
 type HumorFlavorOption = {
   id: number;
@@ -132,31 +135,23 @@ export function TestRunnerClient({
 
   return (
     <div className="grid gap-6">
-      <section className="rounded-2xl border border-border bg-panel p-6 text-panel-foreground shadow-sm">
-        <h2 className="text-lg font-semibold text-panel-foreground">Run Caption Test</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Choose a humor flavor and a test image, then run the Assignment 5 caption
-          generation flow against the existing API.
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Select a test set first, then choose one image from that set to run this humor
-          flavor against.
-        </p>
+      <SectionCard
+        title="Run Caption Test"
+        description="Choose a humor flavor and a test image, then run the Assignment 5 caption generation flow against the existing API. Select a test set first, then choose one image from that set to run this humor flavor against."
+      >
 
         <div className="mt-5 grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
           <div className="grid gap-4">
-            <div>
-              <label
-                htmlFor="study-image-set-select"
-                className="mb-1 block text-sm font-medium text-panel-foreground"
-              >
-                Study Image Set
-              </label>
+            <FormField
+              label="Study Image Set"
+              htmlFor="study-image-set-select"
+              description={selectedStudyImageSet?.description || undefined}
+            >
               <select
                 id="study-image-set-select"
                 value={studyImageSetId}
                 onChange={(event) => onStudyImageSetChange(event.target.value)}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-panel-foreground outline-none focus:border-slate-400"
+                className="w-full"
               >
                 {studyImageSets.map((set) => (
                   <option key={set.id} value={set.id}>
@@ -164,28 +159,18 @@ export function TestRunnerClient({
                   </option>
                 ))}
               </select>
-              {selectedStudyImageSet?.description ? (
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {selectedStudyImageSet.description}
-                </p>
-              ) : null}
-            </div>
+            </FormField>
 
-            <div>
-              <label
-                htmlFor="humor-flavor-select"
-                className="mb-1 block text-sm font-medium text-panel-foreground"
-              >
-                Humor Flavor
-              </label>
-              <p className="mb-2 text-xs text-muted-foreground">
-                Start typing in the select list to search the available flavors.
-              </p>
+            <FormField
+              label="Humor Flavor"
+              htmlFor="humor-flavor-select"
+              description="Start typing in the select list to search the available flavors."
+            >
               <select
                 id="humor-flavor-select"
                 value={humorFlavorId}
                 onChange={(event) => setHumorFlavorId(event.target.value)}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-panel-foreground outline-none focus:border-slate-400"
+                className="w-full"
               >
                 {filteredHumorFlavors.map((flavor) => (
                   <option key={flavor.id} value={flavor.id}>
@@ -193,36 +178,30 @@ export function TestRunnerClient({
                   </option>
                 ))}
               </select>
-              {filteredHumorFlavors.length === 0 ? (
+              {filteredHumorFlavors.length === 0 && (
                 <p className="mt-2 text-sm text-muted-foreground">
                   No humor flavors match the current search.
                 </p>
-              ) : null}
-              {selectedHumorFlavor && !filteredHumorFlavors.some((flavor) => flavor.id === selectedHumorFlavor.id) ? (
+              )}
+              {selectedHumorFlavor && !filteredHumorFlavors.some((flavor) => flavor.id === selectedHumorFlavor.id) && (
                 <p className="mt-2 text-sm text-muted-foreground">
                   Current selection: <code>{selectedHumorFlavor.slug}</code>. Clear or adjust the
                   search to view it in the list.
                 </p>
-              ) : null}
-              {selectedHumorFlavor?.description ? (
+              )}
+              {selectedHumorFlavor?.description && (
                 <p className="mt-2 text-sm text-muted-foreground">
                   {selectedHumorFlavor.description}
                 </p>
-              ) : null}
-            </div>
+              )}
+            </FormField>
 
-            <div>
-              <label
-                htmlFor="test-image-select"
-                className="mb-1 block text-sm font-medium text-panel-foreground"
-              >
-                Test Image
-              </label>
+            <FormField label="Test Image" htmlFor="test-image-select">
               <select
                 id="test-image-select"
                 value={imageId}
                 onChange={(event) => setImageId(event.target.value)}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-panel-foreground outline-none focus:border-slate-400"
+                className="w-full"
               >
                 {testImages.map((image) => (
                   <option key={image.id} value={image.id}>
@@ -230,12 +209,12 @@ export function TestRunnerClient({
                   </option>
                 ))}
               </select>
-              {testImages.length === 0 ? (
+              {testImages.length === 0 && (
                 <p className="mt-2 text-sm text-muted-foreground">
                   No images are mapped to the selected study image set.
                 </p>
-              ) : null}
-            </div>
+              )}
+            </FormField>
           </div>
 
           <div className="rounded-xl border border-border bg-muted/40 p-4">
@@ -268,31 +247,22 @@ export function TestRunnerClient({
             type="button"
             onClick={onRun}
             disabled={isRunning || !humorFlavorId || !studyImageSetId || !imageId}
-            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+            className="btn btn-primary"
           >
             {isRunning ? "Running Test..." : "Run Test"}
           </button>
         </div>
 
-        {error ? (
-          <p className="mt-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300">
-            {error}
-          </p>
-        ) : null}
-      </section>
+        {error && (
+          <AlertBanner type="error">{error}</AlertBanner>
+        )}
+      </SectionCard>
 
-      {response ? (
-        <section className="rounded-2xl border border-border bg-panel p-6 text-panel-foreground shadow-sm">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold text-panel-foreground">Test Results</h2>
-            <p className="text-sm text-muted-foreground">
-              Flavor <code>{response.humorFlavor.slug}</code> on image{" "}
-              <code>{response.image.id}</code>.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Persistence: {response.persisted ? "stored" : "shown in UI only"}.
-            </p>
-          </div>
+      {response && (
+        <SectionCard
+          title="Test Results"
+          description={`Flavor ${response.humorFlavor.slug} on image ${response.image.id}. Persistence: ${response.persisted ? "stored" : "shown in UI only"}.`}
+        >
 
           {normalizedItems.length > 0 ? (
             <div className="mt-5 grid gap-4">
@@ -315,8 +285,8 @@ export function TestRunnerClient({
               {JSON.stringify(response.result, null, 2)}
             </pre>
           )}
-        </section>
-      ) : null}
+        </SectionCard>
+      )}
     </div>
   );
 }

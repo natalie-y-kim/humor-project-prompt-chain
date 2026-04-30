@@ -26,15 +26,15 @@ export default function LoginGate() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-      <section className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-10 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4">
+      <section className="w-full max-w-lg card">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           Prompt Chain Access
         </p>
-        <h1 className="mt-3 text-3xl font-semibold text-slate-900">
+        <h1 className="mt-3 text-3xl font-semibold text-panel-foreground">
           Humor Project Prompt Chain
         </h1>
-        <p className="mt-3 text-sm leading-6 text-slate-600">
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">
           Sign in with Google to access the prompt chain workspace backed by the
           shared Supabase project.
         </p>
@@ -43,14 +43,16 @@ export default function LoginGate() {
           type="button"
           onClick={signInWithGoogle}
           disabled={isLoading}
-          className="mt-8 inline-flex w-full items-center justify-center rounded-md bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="btn btn-primary mt-8 w-full"
         >
           {isLoading ? "Redirecting..." : "Sign in with Google"}
         </button>
 
-        {errorMessage ? (
-          <p className="mt-4 text-sm text-red-600">{errorMessage}</p>
-        ) : null}
+        {errorMessage && (
+          <div className="alert alert-error mt-4">
+            {errorMessage}
+          </div>
+        )}
       </section>
     </main>
   );
