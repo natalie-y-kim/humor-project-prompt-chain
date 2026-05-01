@@ -125,7 +125,7 @@ h2,
 h3,
 .card-title {
   font-family: var(--font-title);
-  letter-spacing: 0;
+  letter-spacing: -0.04em;
 }
 
 /* Button System */
