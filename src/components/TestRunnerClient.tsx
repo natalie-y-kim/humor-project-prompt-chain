@@ -159,6 +159,7 @@ export function TestRunnerClient({
               label="Study Image Set"
               htmlFor="study-image-set-select"
               description={selectedStudyImageSet?.description || undefined}
+              className="[&_label]:font-bold"
             >
               <select
                 id="study-image-set-select"
@@ -178,6 +179,7 @@ export function TestRunnerClient({
               label="Humor Flavor"
               htmlFor="humor-flavor-select"
               description="Start typing in the select list to search the available flavors."
+              className="[&_label]:font-bold"
             >
               <select
                 id="humor-flavor-select"
@@ -213,6 +215,7 @@ export function TestRunnerClient({
               label="Test Image"
               htmlFor="test-image-select"
               description="Choose by description, then confirm visually from the previews."
+              className="[&_label]:font-bold"
             >
               <select
                 id="test-image-select"

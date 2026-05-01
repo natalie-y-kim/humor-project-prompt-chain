@@ -13,6 +13,7 @@ export default async function PromptChainPage() {
         </div>
         <SectionCard
           title="Humor Project Prompt Chain"
+          titleClassName="!text-3xl leading-tight sm:!text-4xl"
           description="This workspace is restricted to users with either the superadmin or matrix admin flag on their profile. Use the sidebar to access features."
         >
           <dl className="mt-8 grid gap-4 sm:grid-cols-2">

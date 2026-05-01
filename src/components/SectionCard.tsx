@@ -7,12 +7,19 @@ interface SectionCardProps {
   description?: string;
   children: ReactNode;
   className?: string;
+  titleClassName?: string;
 }
 
-export function SectionCard({ title, description, children, className = "" }: SectionCardProps) {
+export function SectionCard({
+  title,
+  description,
+  children,
+  className = "",
+  titleClassName = "",
+}: SectionCardProps) {
   return (
     <section className={`card ${className}`}>
-      {title && <h2 className="card-title">{title}</h2>}
+      {title && <h2 className={`card-title ${titleClassName}`}>{title}</h2>}
       {description && <p className="card-description">{description}</p>}
       {children}
     </section>
