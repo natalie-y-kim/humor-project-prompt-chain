@@ -3,7 +3,7 @@
 import { ReactNode } from "react";
 
 interface AlertBannerProps {
-  type: "success" | "error" | "info";
+  type: "success" | "error" | "info" | "warning";
   children: ReactNode;
   className?: string;
 }

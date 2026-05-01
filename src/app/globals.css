@@ -2,22 +2,35 @@
 
 :root {
   color-scheme: light;
-  --background: #f4f6f8;
+  --background: #f6f3fb;
   --foreground: #0f172a;
-  --panel: #ffffff;
+  --panel: #fffbff;
   --panel-foreground: #0f172a;
-  --muted: #eef2f6;
+  --muted: #eee7f7;
   --muted-foreground: #475569;
-  --border: #d8e0e8;
+  --border: #d8cfe6;
 
   /* Design System Additions */
-  --color-primary: #3b82f6;
-  --color-primary-hover: #2563eb;
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
+  --color-primary-foreground: #ffffff;
   --color-secondary: #64748b;
   --color-destructive: #ef4444;
   --color-destructive-hover: #dc2626;
   --color-success: #10b981;
   --color-warning: #f59e0b;
+  --selection: #f3e8ff;
+  --selection-border: #7c3aed;
+  --selection-foreground: #4c1d95;
+  --success-bg: #ecfdf5;
+  --success-border: #a7f3d0;
+  --success-text: #065f46;
+  --error-bg: #fef2f2;
+  --error-border: #fecaca;
+  --error-text: #991b1b;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --warning-text: #92400e;
 
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
@@ -26,6 +39,7 @@
   --font-size-xl: 1.25rem;
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 1.875rem;
+  --font-title: Fraunces, "Fraunces Fallback", Georgia, serif;
 
   --font-weight-normal: 400;
   --font-weight-medium: 500;
@@ -48,36 +62,70 @@
   --color-panel: var(--panel);
   --color-panel-foreground: var(--panel-foreground);
   --color-primary: var(--color-primary);
+  --color-primary-foreground: var(--color-primary-foreground);
   --color-secondary: var(--color-secondary);
   --color-destructive: var(--color-destructive);
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
+  --color-selection: var(--selection);
+  --color-selection-border: var(--selection-border);
+  --color-selection-foreground: var(--selection-foreground);
+  --color-success-bg: var(--success-bg);
+  --color-success-border: var(--success-border);
+  --color-success-text: var(--success-text);
+  --color-error-bg: var(--error-bg);
+  --color-error-border: var(--error-border);
+  --color-error-text: var(--error-text);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-border: var(--warning-border);
+  --color-warning-text: var(--warning-text);
 }
 
 .dark {
   color-scheme: dark;
-  --background: #0f172a;
+  --background: #15121f;
   --foreground: #e2e8f0;
-  --panel: #111c31;
+  --panel: #1d1828;
   --panel-foreground: #f8fafc;
-  --muted: #172338;
+  --muted: #282136;
   --muted-foreground: #94a3b8;
-  --border: #243146;
+  --border: #3b314d;
 
   /* Dark mode adjustments */
-  --color-primary: #60a5fa;
-  --color-primary-hover: #3b82f6;
+  --color-primary: #a78bfa;
+  --color-primary-hover: #c4b5fd;
+  --color-primary-foreground: #1d1235;
   --color-secondary: #94a3b8;
   --color-destructive: #f87171;
   --color-destructive-hover: #ef4444;
   --color-success: #34d399;
   --color-warning: #fbbf24;
+  --selection: #2e2145;
+  --selection-border: #a78bfa;
+  --selection-foreground: #ddd6fe;
+  --success-bg: #052e25;
+  --success-border: #047857;
+  --success-text: #a7f3d0;
+  --error-bg: #450a0a;
+  --error-border: #991b1b;
+  --error-text: #fecaca;
+  --warning-bg: #422006;
+  --warning-border: #92400e;
+  --warning-text: #fde68a;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+h1,
+h2,
+h3,
+.card-title {
+  font-family: var(--font-title);
+  letter-spacing: 0;
 }
 
 /* Button System */
@@ -95,15 +143,14 @@ body {
   outline: none;
 }
 
-.btn:focus {
-  ring: 2px;
-  ring-color: var(--color-primary);
-  ring-offset: 2px;
+.btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .btn-primary {
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-primary-foreground);
   border-color: var(--color-primary);
 }
 
@@ -134,14 +181,15 @@ body {
 }
 
 .btn-destructive {
-  background-color: var(--color-destructive);
-  color: white;
+  background-color: transparent;
+  color: var(--color-destructive);
   border-color: var(--color-destructive);
 }
 
 .btn-destructive:hover {
   background-color: var(--color-destructive-hover);
   border-color: var(--color-destructive-hover);
+  color: white;
 }
 
 /* Form Elements */
@@ -170,10 +218,12 @@ body {
   transition: border-color 0.2s ease;
 }
 
-.form-field input:focus,
-.form-field select:focus,
-.form-field textarea:focus {
+.form-field input:focus-visible,
+.form-field select:focus-visible,
+.form-field textarea:focus-visible {
   border-color: var(--color-primary);
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* Card Styles */
@@ -208,27 +258,21 @@ body {
 }
 
 .alert-success {
-  background-color: #d1fae5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
-}
-
-.dark .alert-success {
-  background-color: #064e3b;
-  color: #a7f3d0;
-  border-color: #065f46;
+  background-color: var(--success-bg);
+  color: var(--success-text);
+  border: 1px solid var(--success-border);
 }
 
 .alert-error {
-  background-color: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #fca5a5;
+  background-color: var(--error-bg);
+  color: var(--error-text);
+  border: 1px solid var(--error-border);
 }
 
-.dark .alert-error {
-  background-color: #450a0a;
-  color: #fca5a5;
-  border-color: #991b1b;
+.alert-warning {
+  background-color: var(--warning-bg);
+  color: var(--warning-text);
+  border: 1px solid var(--warning-border);
 }
 
 .alert-info {

@@ -64,6 +64,19 @@ function normalizeResultItems(result: unknown) {
   return [];
 }
 
+function truncateLabel(value: string, maxLength = 72) {
+  return value.length > maxLength ? `${value.slice(0, maxLength - 1)}...` : value;
+}
+
+function getImageLabel(image: TestImageOption, index: number) {
+  const readableLabel =
+    image.imageDescription?.trim() ||
+    image.additionalContext?.trim() ||
+    image.id;
+
+  return `Image ${index + 1}: ${truncateLabel(readableLabel)}`;
+}
+
 export function TestRunnerClient({
   humorFlavors,
   studyImageSets,
@@ -196,16 +209,20 @@ export function TestRunnerClient({
               )}
             </FormField>
 
-            <FormField label="Test Image" htmlFor="test-image-select">
+            <FormField
+              label="Test Image"
+              htmlFor="test-image-select"
+              description="Choose by description, then confirm visually from the previews."
+            >
               <select
                 id="test-image-select"
                 value={imageId}
                 onChange={(event) => setImageId(event.target.value)}
                 className="w-full"
               >
-                {testImages.map((image) => (
+                {testImages.map((image, index) => (
                   <option key={image.id} value={image.id}>
-                    {image.url ?? image.id}
+                    {getImageLabel(image, index)}
                   </option>
                 ))}
               </select>
@@ -215,6 +232,66 @@ export function TestRunnerClient({
                 </p>
               )}
             </FormField>
+
+            {testImages.length > 0 && (
+              <div className="grid gap-2">
+                <p className="text-sm font-medium text-panel-foreground">
+                  Image Previews
+                </p>
+                <div className="grid max-h-[420px] gap-3 overflow-y-auto pr-1 sm:grid-cols-2 xl:grid-cols-1">
+                  {testImages.map((image, index) => {
+                    const label = getImageLabel(image, index);
+                    const isSelected = image.id === imageId;
+
+                    return (
+                      <button
+                        key={image.id}
+                        type="button"
+                        onClick={() => setImageId(image.id)}
+                        className={`rounded-lg border p-2 text-left transition hover:bg-muted ${
+                          isSelected
+                            ? "border-selection-border bg-selection"
+                            : "border-border bg-background"
+                        } focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`}
+                        aria-pressed={isSelected}
+                      >
+                        <div className="grid grid-cols-[72px_minmax(0,1fr)] gap-3">
+                          <div className="flex h-16 w-[72px] items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
+                            {image.url ? (
+                              <img
+                                src={image.url}
+                                alt={label}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <span className="px-2 text-center text-xs text-muted-foreground">
+                                No preview
+                              </span>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <p className="truncate text-sm font-medium text-panel-foreground">
+                                {label}
+                              </p>
+                              {isSelected && (
+                                <span className="shrink-0 rounded border border-selection-border px-1.5 py-0.5 text-[11px] font-medium text-selection-foreground">
+                                  Selected
+                                </span>
+                              )}
+                            </div>
+                            <p className="mt-1 truncate text-xs text-muted-foreground">
+                              ID {image.id}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="rounded-xl border border-border bg-muted/40 p-4">
